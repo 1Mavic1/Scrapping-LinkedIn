@@ -44,7 +44,7 @@ async function scrapingProfile() {
             if (maxScrollTop == currentScrollTop || elementScrollTop <= currentScrollTop)
                 break
 
-            await wait(32)
+            await wait(50)
 
             let newScrollTop = Math.min(currentScrollTop + 20, maxScrollTop)
 
@@ -66,6 +66,7 @@ async function scrapingProfile() {
                 country: countryCss,
                 email: emailCss,
                 phone: phoneCss,
+                experience: experienceCss,
             },
             option: {
                 buttonSeeMore: buttonSeeMoreCss,
@@ -84,46 +85,60 @@ async function scrapingProfile() {
         const phone = document.querySelector(phoneCss)?.innerText
         const buttonCloseSeeMore = document.querySelector(buttonCloseSeeMoreCss)
         buttonCloseSeeMore.click()
+        const experience = getExperiences()
 
-        return { name, resumen, country, email, phone}
+        return { name, resumen, country, experience, email, phone}
     }
 
     const getProfile = async () => {
-        const profile = await getContactProfile()
+        
         await autoscrollToElement('body')
+        const profile = await getContactProfile()
         console.log(profile)
     }
 
-    await getProfile()
+    
 
-    const allExperience = document.querySelector('#experience-section ul')
-    for (let i = 1; i <= allExperience.childElementCount; i++) {
-        const experience = allExperience.childNodes[i]
-        if(experience.querySelector('ul') == null)
+    const getExperiences = () => {
+        const allExperiences = document.querySelector('#experience-section ul')
+        const listExperiences = []
+        const buttonMoreExperiences = document.querySelector('button.pv-profile-section__see-more-inline')
+        if(buttonMoreExperiences != null)
         {
-            const cargo = experience.querySelector('h3')?.innerText
-            const nombreEmpresa = experience.querySelector('p.t-14')?.innerText
-            const duracion = experience.querySelectorAll('h4')[0]?.children[1]?.innerText
-            const rangoFecha = experience.querySelectorAll('h4')[1]?.children[1]?.innerText
-            const ciudad = experience.querySelectorAll('h4')[2]?.children[1]?.innerText
-            console.log({cargo,nombreEmpresa,duracion,rangoFecha,ciudad})
+            buttonMoreExperiences.click()
         }
-        else{
-            const nombreEmpresa = experience.querySelector('a h3').childNodes[3]?.innerText
-            const duracion = experience.querySelector('a h4').childNodes[3]?.innerText
-            console.log({nombreEmpresa,duracion})
-            const subExperiencia = experience.querySelector('ul')
-            for (let i = 0; i < subExperiencia.childElementCount; i++){
-                 const e = subExperiencia.children[i]
-                 const cargo = e.querySelector('h3').children[1]?.innerText
-                 //const duracion = e.querySelector('h4.t-14').children[1]?.innerText
-                 const duracion = e.querySelectorAll('h4')[0]?.children[1]?.innerText
-                 const fecha = e.querySelectorAll('h4')[1]?.children[1]?.innerText
-                 const ciudad = e.querySelectorAll('h4')[2]?.children[1]?.innerText
-                 console.log({cargo,duracion,fecha,ciudad})
+        for (let i = 1; i <= allExperiences.childElementCount; i++) {
+            const experience = allExperiences.childNodes[i]
+            if(experience.querySelector('ul') == null)
+            {
+                const occupation = experience.querySelector('h3')?.innerText
+                const nameCompany = experience.querySelector('p.t-14')?.innerText
+                const duration = experience.querySelectorAll('h4')[0]?.children[1]?.innerText
+                const date = experience.querySelectorAll('h4')[1]?.children[1]?.innerText
+                const city = experience.querySelectorAll('h4')[2]?.children[1]?.innerText
+                listExperiences.push({occupation,nameCompany,duration,date,city})
+            }
+            else{
+                const listSubExperiences = []
+                const nameCompany = experience.querySelector('a h3').childNodes[3]?.innerText
+                const duration = experience.querySelector('a h4').childNodes[3]?.innerText
+                listSubExperiences.push({nameCompany,duration})
+                const subExperience = experience.querySelector('ul')
+                for (let i = 0; i < subExperience.childElementCount; i++){
+                    const e = subExperience.children[i]
+                    const occupation = e.querySelector('h3').children[1]?.innerText
+                    const duration = e.querySelectorAll('h4')[0]?.children[1]?.innerText
+                    const date = e.querySelectorAll('h4')[1]?.children[1]?.innerText
+                    const city = e.querySelectorAll('h4')[2]?.children[1]?.innerText
+                    listSubExperiences.push({occupation,duration,date,city})
+                }
+                listExperiences.push(listSubExperiences)            
             }
         }
+        return listExperiences
     }
+
+    await getProfile()
 
     const listEducation = document.querySelector('#education-section ul') 
     for (let i = 0; i < listEducation.childElementCount; i++) {
